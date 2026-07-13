@@ -5,50 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cartucho Virtual</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
         #game-container { width: 100vw; height: 100vh; position: relative; z-index: 1; }
         
-        /* Overlay de Alta Prioridade: Fica por cima de tudo até o jogo começar */
-        #loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999; /* Força a camada a ficar à frente do Canvas do emulador */
+        /* Tela 1: Interação Obrigatória (Resolve o bloqueio do Android) */
+        #power-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #111; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 10000;
+        }
+
+        .cart-status { color: #00ff00; font-size: 1.2rem; margin-bottom: 40px; text-shadow: 0 0 10px #00ff00; }
+
+        #power-btn {
+            background-color: transparent; border: 3px solid #ff0000; color: #ff0000;
+            padding: 15px 40px; font-size: 1.8rem; font-weight: bold; font-family: inherit;
+            cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
+            transition: all 0.1s ease-in-out;
         }
         
-        /* Animação com estética rítmica acelerada */
-        .loader-text {
-            color: #fff;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1.5rem;
-            font-weight: bold;
-            letter-spacing: 3px;
-            animation: pulse 1.2s infinite;
-        }
+        #power-btn:active { background-color: #ff0000; color: #000; transform: scale(0.95); }
 
-        @keyframes pulse {
-            0% { opacity: 0.2; }
-            50% { opacity: 1; text-shadow: 0 0 15px #fff; }
-            100% { opacity: 0.2; }
+        /* Tela 2: O Overlay de Carregamento que já estruturamos */
+        #loading-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #000; display: none; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999;
         }
+        
+        .loader-text { color: #fff; font-size: 1.5rem; font-weight: bold; letter-spacing: 3px; animation: pulse 1.2s infinite; }
+        @keyframes pulse { 0% { opacity: 0.2; } 50% { opacity: 1; text-shadow: 0 0 15px #fff; } 100% { opacity: 0.2; } }
 
-        #status-msg { display: none; color: #fff; text-align: center; margin-top: 40vh; font-family: sans-serif; position: relative; z-index: 10; }
+        #status-msg { display: none; color: #fff; text-align: center; margin-top: 40vh; position: relative; z-index: 10; }
     </style>
 </head>
 <body>
     
-    <!-- Tela de Carregamento Implacável -->
+    <!-- Fase de Interação -->
+    <div id="power-screen">
+        <div class="cart-status">CARTUCHO RECONHECIDO</div>
+        <button id="power-btn">POWER ON</button>
+    </div>
+
+    <!-- Fase de Boot -->
     <div id="loading-overlay">
         <div class="loader-text">INICIALIZANDO SISTEMA...</div>
     </div>
 
+    <!-- Fase de Jogo -->
     <div id="game-container"><div id="game"></div></div>
     <div id="status-msg">Aguardando inserção do cartucho...</div>
 
@@ -58,22 +62,32 @@
         const urlRom = urlParams.get('rom');
 
         if (urlCore && urlRom) {
-            window.EJS_player = '#game';
-            window.EJS_core = urlCore;
-            window.EJS_gameUrl = `roms/${urlCore}/${urlRom}`;
-            window.EJS_startOnLoaded = true;
-            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
-            
-            // A TÁTICA DE INTERCEPTAÇÃO: Oculta o overlay APENAS quando o jogo dá o boot real
-            window.EJS_onGameStart = function() {
-                document.getElementById('loading-overlay').style.display = 'none';
-            };
+            // O botão de ligar aguarda o clique do usuário para injetar o emulador
+            document.getElementById('power-btn').addEventListener('click', function() {
+                
+                // 1. Oculta a tela de Power e mostra o Loading Implacável
+                document.getElementById('power-screen').style.display = 'none';
+                document.getElementById('loading-overlay').style.display = 'flex';
 
-            const script = document.createElement('script');
-            script.src = 'https://cdn.emulatorjs.org/latest/data/loader.js';
-            document.body.appendChild(script);
+                // 2. Injeta o EmulatorJS no DOM (A partir daqui, o Android libera o áudio)
+                window.EJS_player = '#game';
+                window.EJS_core = urlCore;
+                window.EJS_gameUrl = `roms/${urlCore}/${urlRom}`;
+                window.EJS_startOnLoaded = true;
+                window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
+                
+                window.EJS_onGameStart = function() {
+                    document.getElementById('loading-overlay').style.display = 'none';
+                };
+
+                const script = document.createElement('script');
+                script.src = 'https://cdn.emulatorjs.org/latest/data/loader.js';
+                document.body.appendChild(script);
+            });
+
         } else {
-            // Remove o overlay de loading imediatamente se não houver tag NFC, mostrando o erro
+            // Cenário sem tag NFC
+            document.getElementById('power-screen').style.display = 'none';
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('game-container').style.display = 'none';
             document.getElementById('status-msg').style.display = 'block';
