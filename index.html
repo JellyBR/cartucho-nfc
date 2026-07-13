@@ -6,16 +6,49 @@
     <title>Cartucho Virtual</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; }
-        #game-container { width: 100vw; height: 100vh; position: relative; z-index: 10; }
+        #game-container { width: 100vw; height: 100vh; position: relative; z-index: 1; }
         
-        /* Nova camada de feedback visual imediato */
-        #boot-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #000; color: #00ff00; font-family: monospace; display: flex; justify-content: center; align-items: center; z-index: 5; font-size: 1.2rem; }
+        /* Overlay de Alta Prioridade: Fica por cima de tudo até o jogo começar */
+        #loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; /* Força a camada a ficar à frente do Canvas do emulador */
+        }
         
-        #status-msg { position: absolute; top: 40vh; width: 100%; color: #fff; font-family: sans-serif; text-align: center; display: none; z-index: 20; }
+        /* Animação com estética rítmica acelerada */
+        .loader-text {
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 3px;
+            animation: pulse 1.2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.2; }
+            50% { opacity: 1; text-shadow: 0 0 15px #fff; }
+            100% { opacity: 0.2; }
+        }
+
+        #status-msg { display: none; color: #fff; text-align: center; margin-top: 40vh; font-family: sans-serif; position: relative; z-index: 10; }
     </style>
 </head>
 <body>
-    <div id="boot-screen">Lendo dados do cartucho...</div>
+    
+    <!-- Tela de Carregamento Implacável -->
+    <div id="loading-overlay">
+        <div class="loader-text">INICIALIZANDO SISTEMA...</div>
+    </div>
+
     <div id="game-container"><div id="game"></div></div>
     <div id="status-msg">Aguardando inserção do cartucho...</div>
 
@@ -30,13 +63,19 @@
             window.EJS_gameUrl = `roms/${urlCore}/${urlRom}`;
             window.EJS_startOnLoaded = true;
             window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
+            
+            // A TÁTICA DE INTERCEPTAÇÃO: Oculta o overlay APENAS quando o jogo dá o boot real
+            window.EJS_onGameStart = function() {
+                document.getElementById('loading-overlay').style.display = 'none';
+            };
 
             const script = document.createElement('script');
             script.src = 'https://cdn.emulatorjs.org/latest/data/loader.js';
             document.body.appendChild(script);
         } else {
-            // Remove a tela de boot e mostra a mensagem de erro se não houver cartucho
-            document.getElementById('boot-screen').style.display = 'none';
+            // Remove o overlay de loading imediatamente se não houver tag NFC, mostrando o erro
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('game-container').style.display = 'none';
             document.getElementById('status-msg').style.display = 'block';
         }
     </script>
