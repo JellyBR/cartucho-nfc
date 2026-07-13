@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cartucho Virtual</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; }
+        #game-container { width: 100vw; height: 100vh; }
+        #status-msg { color: #fff; font-family: sans-serif; text-align: center; margin-top: 40vh; display: none; }
+    </style>
+</head>
+<body>
+    <div id="game-container"><div id="game"></div></div>
+    <div id="status-msg">Aguardando inserção do cartucho...</div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlCore = urlParams.get('core');
+        const urlRom = urlParams.get('rom');
+
+        if (urlCore && urlRom) {
+            window.EJS_player = '#game';
+            window.EJS_core = urlCore;
+            window.EJS_gameUrl = `roms/${urlCore}/${urlRom}`;
+            window.EJS_startOnLoaded = true;
+            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
+
+            const script = document.createElement('script');
+            script.src = 'https://cdn.emulatorjs.org/latest/data/loader.js';
+            document.body.appendChild(script);
+        } else {
+            document.getElementById('game-container').style.display = 'none';
+            document.getElementById('status-msg').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
