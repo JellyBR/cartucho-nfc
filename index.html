@@ -6,11 +6,16 @@
     <title>Cartucho Virtual</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; }
-        #game-container { width: 100vw; height: 100vh; }
-        #status-msg { color: #fff; font-family: sans-serif; text-align: center; margin-top: 40vh; display: none; }
+        #game-container { width: 100vw; height: 100vh; position: relative; z-index: 10; }
+        
+        /* Nova camada de feedback visual imediato */
+        #boot-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #000; color: #00ff00; font-family: monospace; display: flex; justify-content: center; align-items: center; z-index: 5; font-size: 1.2rem; }
+        
+        #status-msg { position: absolute; top: 40vh; width: 100%; color: #fff; font-family: sans-serif; text-align: center; display: none; z-index: 20; }
     </style>
 </head>
 <body>
+    <div id="boot-screen">Lendo dados do cartucho...</div>
     <div id="game-container"><div id="game"></div></div>
     <div id="status-msg">Aguardando inserção do cartucho...</div>
 
@@ -30,7 +35,8 @@
             script.src = 'https://cdn.emulatorjs.org/latest/data/loader.js';
             document.body.appendChild(script);
         } else {
-            document.getElementById('game-container').style.display = 'none';
+            // Remove a tela de boot e mostra a mensagem de erro se não houver cartucho
+            document.getElementById('boot-screen').style.display = 'none';
             document.getElementById('status-msg').style.display = 'block';
         }
     </script>
