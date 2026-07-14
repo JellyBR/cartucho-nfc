@@ -3,36 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cartucho Virtual</title>
+    <!-- Título genérico para evitar indexação óbvia -->
+    <title>Sistema de Execução</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
         #game-container { width: 100vw; height: 100vh; position: relative; z-index: 1; }
         
-        /* Tela 1: Interação Obrigatória (Resolve o bloqueio do Android) */
-        #power-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #111; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 10000;
-        }
-
-        .cart-status { color: #00ff00; font-size: 1.2rem; margin-bottom: 40px; text-shadow: 0 0 10px #00ff00; }
-
-        #power-btn {
-            background-color: transparent; border: 3px solid #ff0000; color: #ff0000;
-            padding: 15px 40px; font-size: 1.8rem; font-weight: bold; font-family: inherit;
-            cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
-            transition: all 0.1s ease-in-out;
-        }
-        
+        #power-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
+        .cart-status { color: #00ff00; font-size: 1.2rem; margin-bottom: 40px; text-shadow: 0 0 10px #00ff00; text-transform: uppercase; }
+        #power-btn { background-color: transparent; border: 3px solid #ff0000; color: #ff0000; padding: 15px 40px; font-size: 1.8rem; font-weight: bold; font-family: inherit; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: all 0.1s ease-in-out; }
         #power-btn:active { background-color: #ff0000; color: #000; transform: scale(0.95); }
-
-        /* Tela 2: O Overlay de Carregamento que já estruturamos */
-        #loading-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #000; display: none; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 9999;
-        }
         
+        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #000; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
         .loader-text { color: #fff; font-size: 1.5rem; font-weight: bold; letter-spacing: 3px; animation: pulse 1.2s infinite; }
         @keyframes pulse { 0% { opacity: 0.2; } 50% { opacity: 1; text-shadow: 0 0 15px #fff; } 100% { opacity: 0.2; } }
 
@@ -41,38 +23,36 @@
 </head>
 <body>
     
-    <!-- Fase de Interação -->
     <div id="power-screen">
-        <div class="cart-status">CARTUCHO RECONHECIDO</div>
+        <div class="cart-status">Conexão Estabelecida</div>
         <button id="power-btn">POWER ON</button>
     </div>
 
-    <!-- Fase de Boot -->
     <div id="loading-overlay">
-        <div class="loader-text">INICIALIZANDO SISTEMA...</div>
+        <!-- Mensagem alterada para não revelar do que se trata -->
+        <div class="loader-text">DECODIFICANDO DADOS...</div>
     </div>
 
-    <!-- Fase de Jogo -->
     <div id="game-container"><div id="game"></div></div>
-    <div id="status-msg">Aguardando inserção do cartucho...</div>
+    <!-- Mensagem de erro severa -->
+    <div id="status-msg">Acesso Negado ou Dados Ausentes.</div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const urlCore = urlParams.get('core');
-        const urlRom = urlParams.get('rom');
+        
+        // A OFUSCAÇÃO: 'c' substitui 'core' | 'id' substitui 'rom'
+        const sys = urlParams.get('c');
+        const dataId = urlParams.get('id');
 
-        if (urlCore && urlRom) {
-            // O botão de ligar aguarda o clique do usuário para injetar o emulador
+        if (sys && dataId) {
             document.getElementById('power-btn').addEventListener('click', function() {
                 
-                // 1. Oculta a tela de Power e mostra o Loading Implacável
                 document.getElementById('power-screen').style.display = 'none';
                 document.getElementById('loading-overlay').style.display = 'flex';
 
-                // 2. Injeta o EmulatorJS no DOM (A partir daqui, o Android libera o áudio)
                 window.EJS_player = '#game';
-                window.EJS_core = urlCore;
-                window.EJS_gameUrl = `roms/${urlCore}/${urlRom}`;
+                window.EJS_core = sys;
+                window.EJS_gameUrl = `roms/${sys}/${dataId}`;
                 window.EJS_startOnLoaded = true;
                 window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
                 
@@ -86,7 +66,6 @@
             });
 
         } else {
-            // Cenário sem tag NFC
             document.getElementById('power-screen').style.display = 'none';
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('game-container').style.display = 'none';
