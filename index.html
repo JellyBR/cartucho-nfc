@@ -70,6 +70,14 @@
         if (sys && dataId) {
             document.getElementById('power-btn').addEventListener('click', function() {
                 
+                // INJEÇÃO TÁTICA: FORÇAR TELA CHEIA (FULLSCREEN API)
+                const docElm = document.documentElement;
+                if (docElm.requestFullscreen) {
+                    docElm.requestFullscreen().catch(err => console.warn(err));
+                } else if (docElm.webkitRequestFullscreen) { /* Safari / iOS */
+                    docElm.webkitRequestFullscreen();
+                }
+                
                 document.getElementById('power-screen').style.display = 'none';
                 document.getElementById('loading-overlay').style.display = 'flex';
 
