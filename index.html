@@ -2,11 +2,37 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Título genérico para evitar indexação óbvia -->
+    
+    <!-- Bloqueio de Zoom e Escala Extrema -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    
+    <!-- Link para o Manifesto Nativo -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Meta-tags de Imersão para iOS (Apple) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sistema">
+    
     <title>Sistema de Execução</title>
+    
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
+        /* Desativa seleções de texto acidentais durante o jogo */
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: #000; 
+            overflow: hidden; 
+            font-family: 'Courier New', Courier, monospace;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            touch-action: none; 
+        }
+        
         #game-container { width: 100vw; height: 100vh; position: relative; z-index: 1; }
         
         #power-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
@@ -29,18 +55,15 @@
     </div>
 
     <div id="loading-overlay">
-        <!-- Mensagem alterada para não revelar do que se trata -->
         <div class="loader-text">DECODIFICANDO DADOS...</div>
     </div>
 
     <div id="game-container"><div id="game"></div></div>
-    <!-- Mensagem de erro severa -->
     <div id="status-msg">Acesso Negado ou Dados Ausentes.</div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         
-        // A OFUSCAÇÃO: 'c' substitui 'core' | 'id' substitui 'rom'
         const sys = urlParams.get('c');
         const dataId = urlParams.get('id');
 
