@@ -117,12 +117,13 @@
                 const virtualButtons = Array.from(gameContainer.querySelectorAll('div, span'));
                 
                 let btnEsq = null, btnDir = null, btnSelect = null, btnStart = null;
+                let btnA = null, btnB = null, btnX = null, btnY = null;
                 
                 // Mapeia e identifica todos os botões pela string de texto
                 virtualButtons.forEach(btn => {
                     const txt = btn.innerText ? btn.innerText.trim() : '';
                     
-                    // 1. ELIMINAÇÃO SUMÁRIA DA VELOCIDADE
+                    // 1. ELIMINAÇÃO SUMÁRIA DA VELOCIDADE (Global para todos os consoles)
                     if (txt === 'Rápido' || txt === 'Lento') {
                         btn.style.setProperty('display', 'none', 'important');
                     }
@@ -132,19 +133,18 @@
                     if (txt === 'DIR') btnDir = btn;
                     if (txt === 'Select') btnSelect = btn;
                     if (txt === 'Start') btnStart = btn;
+                    if (txt === 'A') btnA = btn;
+                    if (txt === 'B') btnB = btn;
+                    if (txt === 'X') btnX = btn;
+                    if (txt === 'Y') btnY = btn;
                 });
                 
-                // 3. ANCORAGEM TÁTICA SNES (CÁLCULO EM TEMPO REAL)
+                // 3. ANCORAGEM TÁTICA SNES
                 if ((coreName === 'snes' || coreName === 'sfc') && btnEsq && btnDir && btnSelect && btnStart) {
-                    
                     const esqRect = btnEsq.getBoundingClientRect();
                     const dirRect = btnDir.getBoundingClientRect();
                     
                     if (esqRect.bottom > 0 && dirRect.bottom > 0) {
-                        
-                        // FIX TÁTICO: position: fixed garante que a coordenada será relativa à tela inteira
-                        
-                        // Select: Colado 15px abaixo do botão ESQ
                         btnSelect.style.setProperty('position', 'fixed', 'important');
                         btnSelect.style.setProperty('top', (esqRect.bottom + 15) + 'px', 'important');
                         btnSelect.style.setProperty('left', esqRect.left + 'px', 'important');
@@ -154,7 +154,6 @@
                         btnSelect.style.setProperty('transform', 'none', 'important');
                         btnSelect.style.setProperty('z-index', '9999', 'important');
                         
-                        // Start: Colado 15px abaixo do botão DIR
                         btnStart.style.setProperty('position', 'fixed', 'important');
                         btnStart.style.setProperty('top', (dirRect.bottom + 15) + 'px', 'important');
                         btnStart.style.setProperty('left', 'auto', 'important');
@@ -166,6 +165,51 @@
                         btnStart.style.setProperty('z-index', '9999', 'important');
                     }
                 }
+
+                // 4. ANCORAGEM TÁTICA ATARI 2600 (Acima dos controles inferiores)
+                if (coreName === 'atari2600' && btnSelect && btnStart) {
+                    // Agrupa os botões de ação encontrados na direita
+                    const rightButtons = [btnA, btnB, btnX, btnY].filter(b => b !== null);
+
+                    if (rightButtons.length > 0) {
+                        let minTop = 9999;
+                        let rightMost = 0;
+
+                        // Localiza o botão mais alto e o mais à direita para criar a âncora
+                        rightButtons.forEach(b => {
+                            const rect = b.getBoundingClientRect();
+                            if (rect.top > 0 && rect.top < minTop) minTop = rect.top;
+                            if (rect.right > 0 && rect.right > rightMost) rightMost = rect.right;
+                        });
+
+                        if (minTop !== 9999) {
+                            // Select: Posicionado acima do Direcional, usando a mesma altura dos botões de ação para simetria
+                            btnSelect.style.setProperty('position', 'fixed', 'important');
+                            btnSelect.style.setProperty('top', (minTop - 55) + 'px', 'important');
+                            btnSelect.style.setProperty('left', '10%', 'important'); 
+                            btnSelect.style.setProperty('bottom', 'auto', 'important');
+                            btnSelect.style.setProperty('right', 'auto', 'important');
+                            btnSelect.style.setProperty('margin', '0', 'important');
+                            btnSelect.style.setProperty('transform', 'none', 'important');
+                            btnSelect.style.setProperty('z-index', '9999', 'important');
+                            
+                            // Start (Reset): Posicionado logo acima do botão de ação da direita
+                            btnStart.style.setProperty('position', 'fixed', 'important');
+                            btnStart.style.setProperty('top', (minTop - 55) + 'px', 'important');
+                            btnStart.style.setProperty('left', 'auto', 'important');
+                            
+                            // Alinha à direita acompanhando a margem do botão de ação
+                            const rightOffset = window.innerWidth - rightMost;
+                            btnStart.style.setProperty('right', (rightOffset > 0 ? rightOffset : 20) + 'px', 'important');
+                            
+                            btnStart.style.setProperty('bottom', 'auto', 'important');
+                            btnStart.style.setProperty('margin', '0', 'important');
+                            btnStart.style.setProperty('transform', 'none', 'important');
+                            btnStart.style.setProperty('z-index', '9999', 'important');
+                        }
+                    }
+                }
+
             }, 300); 
         }
     </script>
