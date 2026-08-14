@@ -116,7 +116,7 @@
                 
                 const virtualButtons = Array.from(gameContainer.querySelectorAll('div, span'));
                 
-                let btnEsq = null, btnDir = null, btnSelect = null, btnStart = null;
+                let btnEsq = null, btnDir = null, btnSelect = null, btnStart = null, btnResetar = null;
                 
                 // Mapeia e identifica todos os botões pela string de texto
                 virtualButtons.forEach(btn => {
@@ -131,11 +131,13 @@
                     if (txt === 'ESQ') btnEsq = btn;
                     if (txt === 'DIR') btnDir = btn;
                     if (txt === 'Select') btnSelect = btn;
-                    // Interceptação dupla: Atari pode chamar o botão de "Start" ou de "Reset"
-                    if (txt === 'Start' || txt === 'Reset') btnStart = btn;
+                    if (txt === 'Start') btnStart = btn;
+                    
+                    // Captura Exclusiva do Atari baseado na imagem do cliente
+                    if (txt === 'Resetar' || txt === 'Reset') btnResetar = btn;
                 });
                 
-                // 3. ANCORAGEM TÁTICA SNES (Mantida e Funcional)
+                // 3. ANCORAGEM TÁTICA SNES (ESTADO DE OURO - INTOCÁVEL)
                 if ((coreName === 'snes' || coreName === 'sfc') && btnEsq && btnDir && btnSelect && btnStart) {
                     const esqRect = btnEsq.getBoundingClientRect();
                     const dirRect = btnDir.getBoundingClientRect();
@@ -162,28 +164,46 @@
                     }
                 }
 
-                // 4. ANCORAGEM TÁTICA ATARI 2600 (Fixado a 180px da base)
-                if (coreName === 'atari2600' && btnSelect && btnStart) {
+                // 4. ANCORAGEM TÁTICA ATARI 2600 (MOTOR DE VIEWPORT)
+                if (coreName === 'atari2600' && btnSelect && btnResetar) {
                     
-                    // Select: Acima do D-pad (Esquerda)
-                    btnSelect.style.setProperty('position', 'fixed', 'important');
-                    btnSelect.style.setProperty('bottom', '180px', 'important');
-                    btnSelect.style.setProperty('left', '10%', 'important'); 
-                    btnSelect.style.setProperty('top', 'auto', 'important');
-                    btnSelect.style.setProperty('right', 'auto', 'important');
-                    btnSelect.style.setProperty('margin', '0', 'important');
-                    btnSelect.style.setProperty('transform', 'none', 'important');
-                    btnSelect.style.setProperty('z-index', '9999', 'important');
+                    // Verifica em tempo real se o celular está deitado ou em pé
+                    const isPortrait = window.innerHeight > window.innerWidth;
                     
-                    // Start/Reset: Acima do botão de Ação (Direita)
-                    btnStart.style.setProperty('position', 'fixed', 'important');
-                    btnStart.style.setProperty('bottom', '180px', 'important');
-                    btnStart.style.setProperty('right', '10%', 'important');
-                    btnStart.style.setProperty('top', 'auto', 'important');
-                    btnStart.style.setProperty('left', 'auto', 'important');
-                    btnStart.style.setProperty('margin', '0', 'important');
-                    btnStart.style.setProperty('transform', 'none', 'important');
-                    btnStart.style.setProperty('z-index', '9999', 'important');
+                    if (isPortrait) {
+                        // VERTICAL: Botões empurrados para 35% de altura, evitando o D-pad gigante
+                        btnSelect.style.setProperty('position', 'fixed', 'important');
+                        btnSelect.style.setProperty('bottom', '35%', 'important');
+                        btnSelect.style.setProperty('left', '12%', 'important'); 
+                        btnSelect.style.setProperty('top', 'auto', 'important');
+                        btnSelect.style.setProperty('right', 'auto', 'important');
+                        
+                        btnResetar.style.setProperty('position', 'fixed', 'important');
+                        btnResetar.style.setProperty('bottom', '35%', 'important');
+                        btnResetar.style.setProperty('right', '12%', 'important');
+                        btnResetar.style.setProperty('top', 'auto', 'important');
+                        btnResetar.style.setProperty('left', 'auto', 'important');
+                    } else {
+                        // HORIZONTAL: Botões cravados no topo (20%), na área preta acima dos controles
+                        btnSelect.style.setProperty('position', 'fixed', 'important');
+                        btnSelect.style.setProperty('top', '20%', 'important');
+                        btnSelect.style.setProperty('left', '12%', 'important'); 
+                        btnSelect.style.setProperty('bottom', 'auto', 'important');
+                        btnSelect.style.setProperty('right', 'auto', 'important');
+                        
+                        btnResetar.style.setProperty('position', 'fixed', 'important');
+                        btnResetar.style.setProperty('top', '20%', 'important');
+                        btnResetar.style.setProperty('right', '12%', 'important');
+                        btnResetar.style.setProperty('bottom', 'auto', 'important');
+                        btnResetar.style.setProperty('left', 'auto', 'important');
+                    }
+
+                    // Blindagem comum de margens para ambos os modos
+                    [btnSelect, btnResetar].forEach(btn => {
+                        btn.style.setProperty('margin', '0', 'important');
+                        btn.style.setProperty('transform', 'none', 'important');
+                        btn.style.setProperty('z-index', '9999', 'important');
+                    });
                 }
 
             }, 300); 
