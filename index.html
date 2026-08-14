@@ -90,7 +90,7 @@
                 window.EJS_onGameStart = function() {
                     document.getElementById('loading-overlay').style.display = 'none';
                     
-                    // INICIA A BLINDAGEM DE LAYOUT DO GAMEPAD
+                    // INICIA O RASTREAMENTO DINÂMICO DE LAYOUT
                     injetarLayoutTatico(sys);
                 };
 
@@ -106,49 +106,63 @@
             document.getElementById('status-msg').style.display = 'block';
         }
         
-        // ==========================================
-        // MOTOR DE INJEÇÃO DE LAYOUT E OVERRIDE CSS
-        // ==========================================
+        // ==========================================================
+        // MOTOR REATIVO DE LAYOUT (RASTREAMENTO DE BOUNDING BOX)
+        // ==========================================================
         function injetarLayoutTatico(coreName) {
-            // Utilizamos um setInterval leve para garantir que o layout persista 
-            // mesmo se o EmulatorJS recalcular as posições ao rotacionar a tela.
             setInterval(() => {
                 const gameContainer = document.getElementById('game');
                 if (!gameContainer) return;
                 
-                // Seleciona todos os elementos de texto do gamepad virtual injetados
-                const virtualButtons = gameContainer.querySelectorAll('div, span');
+                const virtualButtons = Array.from(gameContainer.querySelectorAll('div, span'));
                 
+                let btnEsq = null, btnDir = null, btnSelect = null, btnStart = null;
+                
+                // Mapeia e identifica todos os botões pela string de texto
                 virtualButtons.forEach(btn => {
                     const txt = btn.innerText ? btn.innerText.trim() : '';
                     
-                    // 1. ELIMINAÇÃO SUMÁRIA DOS BOTÕES DE VELOCIDADE
+                    // 1. ELIMINAÇÃO SUMÁRIA DA VELOCIDADE
                     if (txt === 'Rápido' || txt === 'Lento') {
                         btn.style.setProperty('display', 'none', 'important');
                     }
                     
-                    // 2. REPOSICIONAMENTO TÁTICO SNES
-                    // Validamos se o núcleo é o SNES para não quebrar outros consoles ainda
-                    if (coreName === 'snes' || coreName === 'sfc') {
-                        
-                        // Select na ESQUERDA (Abaixo do botão ESQ)
-                        if (txt === 'Select') {
-                            btn.style.setProperty('top', '22%', 'important'); 
-                            btn.style.setProperty('left', '5%', 'important');
-                            btn.style.setProperty('bottom', 'auto', 'important');
-                            btn.style.setProperty('right', 'auto', 'important');
-                        }
-                        
-                        // Start na DIREITA (Abaixo do botão DIR)
-                        if (txt === 'Start') {
-                            btn.style.setProperty('top', '22%', 'important');
-                            btn.style.setProperty('right', '5%', 'important');
-                            btn.style.setProperty('left', 'auto', 'important');
-                            btn.style.setProperty('bottom', 'auto', 'important');
-                        }
-                    }
+                    // 2. CAPTURA DOS NÓS ALVO
+                    if (txt === 'ESQ') btnEsq = btn;
+                    if (txt === 'DIR') btnDir = btn;
+                    if (txt === 'Select') btnSelect = btn;
+                    if (txt === 'Start') btnStart = btn;
                 });
-            }, 1000); // 1 varredura por segundo para ancorar o CSS sem onerar a CPU mobile
+                
+                // 3. ANCORAGEM TÁTICA SNES (CÁLCULO EM TEMPO REAL)
+                if ((coreName === 'snes' || coreName === 'sfc') && btnEsq && btnDir && btnSelect && btnStart) {
+                    
+                    // Lê a coordenada exata em pixels dos botões superiores na tela atual
+                    const esqRect = btnEsq.getBoundingClientRect();
+                    const dirRect = btnDir.getBoundingClientRect();
+                    
+                    // Só aplica as regras se o emulador já tiver desenhado o botão na tela
+                    if (esqRect.bottom > 0) {
+                        
+                        // Select: Colado 20px abaixo do botão ESQ, alinhado à esquerda
+                        btnSelect.style.setProperty('top', (esqRect.bottom + 20) + 'px', 'important');
+                        btnSelect.style.setProperty('left', esqRect.left + 'px', 'important');
+                        btnSelect.style.setProperty('bottom', 'auto', 'important');
+                        btnSelect.style.setProperty('right', 'auto', 'important');
+                        btnSelect.style.setProperty('margin', '0', 'important');
+                        btnSelect.style.setProperty('transform', 'none', 'important'); // Anula qualquer centralização nativa do emulador
+                        
+                        // Start: Colado 20px abaixo do botão DIR, alinhado à direita
+                        btnStart.style.setProperty('top', (dirRect.bottom + 20) + 'px', 'important');
+                        const rightOffset = window.innerWidth - dirRect.right;
+                        btnStart.style.setProperty('right', rightOffset + 'px', 'important');
+                        btnStart.style.setProperty('left', 'auto', 'important');
+                        btnStart.style.setProperty('bottom', 'auto', 'important');
+                        btnStart.style.setProperty('margin', '0', 'important');
+                        btnStart.style.setProperty('transform', 'none', 'important');
+                    }
+                }
+            }, 300); // Frequência de 300ms para ajustar instantaneamente se o usuário virar o aparelho
         }
     </script>
 </body>
