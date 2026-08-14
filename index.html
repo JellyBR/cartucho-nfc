@@ -89,6 +89,9 @@
                 
                 window.EJS_onGameStart = function() {
                     document.getElementById('loading-overlay').style.display = 'none';
+                    
+                    // INICIA A BLINDAGEM DE LAYOUT DO GAMEPAD
+                    injetarLayoutTatico(sys);
                 };
 
                 const script = document.createElement('script');
@@ -101,6 +104,51 @@
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('game-container').style.display = 'none';
             document.getElementById('status-msg').style.display = 'block';
+        }
+        
+        // ==========================================
+        // MOTOR DE INJEÇÃO DE LAYOUT E OVERRIDE CSS
+        // ==========================================
+        function injetarLayoutTatico(coreName) {
+            // Utilizamos um setInterval leve para garantir que o layout persista 
+            // mesmo se o EmulatorJS recalcular as posições ao rotacionar a tela.
+            setInterval(() => {
+                const gameContainer = document.getElementById('game');
+                if (!gameContainer) return;
+                
+                // Seleciona todos os elementos de texto do gamepad virtual injetados
+                const virtualButtons = gameContainer.querySelectorAll('div, span');
+                
+                virtualButtons.forEach(btn => {
+                    const txt = btn.innerText ? btn.innerText.trim() : '';
+                    
+                    // 1. ELIMINAÇÃO SUMÁRIA DOS BOTÕES DE VELOCIDADE
+                    if (txt === 'Rápido' || txt === 'Lento') {
+                        btn.style.setProperty('display', 'none', 'important');
+                    }
+                    
+                    // 2. REPOSICIONAMENTO TÁTICO SNES
+                    // Validamos se o núcleo é o SNES para não quebrar outros consoles ainda
+                    if (coreName === 'snes' || coreName === 'sfc') {
+                        
+                        // Select na ESQUERDA (Abaixo do botão ESQ)
+                        if (txt === 'Select') {
+                            btn.style.setProperty('top', '22%', 'important'); 
+                            btn.style.setProperty('left', '5%', 'important');
+                            btn.style.setProperty('bottom', 'auto', 'important');
+                            btn.style.setProperty('right', 'auto', 'important');
+                        }
+                        
+                        // Start na DIREITA (Abaixo do botão DIR)
+                        if (txt === 'Start') {
+                            btn.style.setProperty('top', '22%', 'important');
+                            btn.style.setProperty('right', '5%', 'important');
+                            btn.style.setProperty('left', 'auto', 'important');
+                            btn.style.setProperty('bottom', 'auto', 'important');
+                        }
+                    }
+                });
+            }, 1000); // 1 varredura por segundo para ancorar o CSS sem onerar a CPU mobile
         }
     </script>
 </body>
