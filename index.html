@@ -107,7 +107,7 @@
         }
         
         // ==========================================================
-        // MOTOR REATIVO DE LAYOUT (RASTREAMENTO DE BOUNDING BOX)
+        // MOTOR REATIVO DE LAYOUT (RASTREAMENTO BLINDADO)
         // ==========================================================
         function injetarLayoutTatico(coreName) {
             setInterval(() => {
@@ -137,32 +137,36 @@
                 // 3. ANCORAGEM TÁTICA SNES (CÁLCULO EM TEMPO REAL)
                 if ((coreName === 'snes' || coreName === 'sfc') && btnEsq && btnDir && btnSelect && btnStart) {
                     
-                    // Lê a coordenada exata em pixels dos botões superiores na tela atual
                     const esqRect = btnEsq.getBoundingClientRect();
                     const dirRect = btnDir.getBoundingClientRect();
                     
-                    // Só aplica as regras se o emulador já tiver desenhado o botão na tela
-                    if (esqRect.bottom > 0) {
+                    if (esqRect.bottom > 0 && dirRect.bottom > 0) {
                         
-                        // Select: Colado 20px abaixo do botão ESQ, alinhado à esquerda
-                        btnSelect.style.setProperty('top', (esqRect.bottom + 20) + 'px', 'important');
+                        // FIX TÁTICO: position: fixed garante que a coordenada será relativa à tela inteira
+                        
+                        // Select: Colado 15px abaixo do botão ESQ
+                        btnSelect.style.setProperty('position', 'fixed', 'important');
+                        btnSelect.style.setProperty('top', (esqRect.bottom + 15) + 'px', 'important');
                         btnSelect.style.setProperty('left', esqRect.left + 'px', 'important');
                         btnSelect.style.setProperty('bottom', 'auto', 'important');
                         btnSelect.style.setProperty('right', 'auto', 'important');
                         btnSelect.style.setProperty('margin', '0', 'important');
-                        btnSelect.style.setProperty('transform', 'none', 'important'); // Anula qualquer centralização nativa do emulador
+                        btnSelect.style.setProperty('transform', 'none', 'important');
+                        btnSelect.style.setProperty('z-index', '9999', 'important');
                         
-                        // Start: Colado 20px abaixo do botão DIR, alinhado à direita
-                        btnStart.style.setProperty('top', (dirRect.bottom + 20) + 'px', 'important');
+                        // Start: Colado 15px abaixo do botão DIR
+                        btnStart.style.setProperty('position', 'fixed', 'important');
+                        btnStart.style.setProperty('top', (dirRect.bottom + 15) + 'px', 'important');
+                        btnStart.style.setProperty('left', 'auto', 'important');
                         const rightOffset = window.innerWidth - dirRect.right;
                         btnStart.style.setProperty('right', rightOffset + 'px', 'important');
-                        btnStart.style.setProperty('left', 'auto', 'important');
                         btnStart.style.setProperty('bottom', 'auto', 'important');
                         btnStart.style.setProperty('margin', '0', 'important');
                         btnStart.style.setProperty('transform', 'none', 'important');
+                        btnStart.style.setProperty('z-index', '9999', 'important');
                     }
                 }
-            }, 300); // Frequência de 300ms para ajustar instantaneamente se o usuário virar o aparelho
+            }, 300); 
         }
     </script>
 </body>
