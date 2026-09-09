@@ -81,7 +81,7 @@
                 document.getElementById('power-screen').style.display = 'none';
                 document.getElementById('loading-overlay').style.display = 'flex';
                 
-                // Trava de segurança para não esconder o erro do emulador.
+                // Trava de segurança
                 setTimeout(function() {
                     const overlay = document.getElementById('loading-overlay');
                     if (overlay) overlay.style.display = 'none';
@@ -121,6 +121,7 @@
                 const virtualButtons = Array.from(gameContainer.querySelectorAll('div, span'));
                 
                 let btnEsq = null, btnDir = null, btnSelect = null, btnStart = null, btnResetar = null;
+                let btnX = null, btnY = null;
                 
                 virtualButtons.forEach(btn => {
                     const txt = btn.innerText ? btn.innerText.trim() : '';
@@ -132,8 +133,15 @@
                     if (txt === 'Select') btnSelect = btn;
                     if (txt === 'Start') btnStart = btn;
                     if (txt === 'Resetar' || txt === 'Reset') btnResetar = btn;
+                    
+                    // Captura dos novos botões
+                    if (txt === 'X') btnX = btn;
+                    if (txt === 'Y') btnY = btn;
                 });
                 
+                // ==========================================
+                // 1. SNES (ESTADO DE OURO - INTOCÁVEL)
+                // ==========================================
                 if ((coreName === 'snes' || coreName === 'sfc') && btnEsq && btnDir && btnSelect && btnStart) {
                     const esqRect = btnEsq.getBoundingClientRect();
                     const dirRect = btnDir.getBoundingClientRect();
@@ -160,6 +168,9 @@
                     }
                 }
 
+                // ==========================================
+                // 2. ATARI 2600
+                // ==========================================
                 if (coreName === 'atari2600' && btnSelect && btnResetar) {
                     const isPortrait = window.innerHeight > window.innerWidth;
                     if (isPortrait) {
@@ -192,25 +203,52 @@
                     });
                 }
 
-                // Cobre tanto o MAME quanto o FBNEO
-                if ((coreName === 'mame2003' || coreName === 'fbneo') && btnSelect && btnStart) {
-                    btnSelect.style.setProperty('position', 'fixed', 'important');
-                    btnSelect.style.setProperty('top', '15px', 'important');
-                    btnSelect.style.setProperty('left', '15px', 'important');
-                    btnSelect.style.setProperty('bottom', 'auto', 'important');
-                    btnSelect.style.setProperty('right', 'auto', 'important');
-                    btnSelect.style.setProperty('margin', '0', 'important');
-                    btnSelect.style.setProperty('transform', 'none', 'important');
-                    btnSelect.style.setProperty('z-index', '9999', 'important');
+                // ==========================================
+                // 3. ARCADE (FBNEO / MAME)
+                // ==========================================
+                if (coreName === 'mame2003' || coreName === 'fbneo') {
                     
-                    btnStart.style.setProperty('position', 'fixed', 'important');
-                    btnStart.style.setProperty('top', '15px', 'important');
-                    btnStart.style.setProperty('right', '15px', 'important');
-                    btnStart.style.setProperty('bottom', 'auto', 'important');
-                    btnStart.style.setProperty('left', 'auto', 'important');
-                    btnStart.style.setProperty('margin', '0', 'important');
-                    btnStart.style.setProperty('transform', 'none', 'important');
-                    btnStart.style.setProperty('z-index', '9999', 'important');
+                    // Oculta os botões X e Y sumariamente
+                    if (btnX) btnX.style.setProperty('display', 'none', 'important');
+                    if (btnY) btnY.style.setProperty('display', 'none', 'important');
+
+                    if (btnSelect && btnStart) {
+                        const isPortrait = window.innerHeight > window.innerWidth;
+                        
+                        if (isPortrait) {
+                            // VERTICAL: Botões ancorados a 40% da base (na área preta)
+                            btnSelect.style.setProperty('position', 'fixed', 'important');
+                            btnSelect.style.setProperty('bottom', '40%', 'important');
+                            btnSelect.style.setProperty('left', '10%', 'important');
+                            btnSelect.style.setProperty('top', 'auto', 'important');
+                            btnSelect.style.setProperty('right', 'auto', 'important');
+                            
+                            btnStart.style.setProperty('position', 'fixed', 'important');
+                            btnStart.style.setProperty('bottom', '40%', 'important');
+                            btnStart.style.setProperty('right', '10%', 'important');
+                            btnStart.style.setProperty('top', 'auto', 'important');
+                            btnStart.style.setProperty('left', 'auto', 'important');
+                        } else {
+                            // HORIZONTAL: Mantém o topo intacto
+                            btnSelect.style.setProperty('position', 'fixed', 'important');
+                            btnSelect.style.setProperty('top', '15px', 'important');
+                            btnSelect.style.setProperty('left', '15px', 'important');
+                            btnSelect.style.setProperty('bottom', 'auto', 'important');
+                            btnSelect.style.setProperty('right', 'auto', 'important');
+                            
+                            btnStart.style.setProperty('position', 'fixed', 'important');
+                            btnStart.style.setProperty('top', '15px', 'important');
+                            btnStart.style.setProperty('right', '15px', 'important');
+                            btnStart.style.setProperty('bottom', 'auto', 'important');
+                            btnStart.style.setProperty('left', 'auto', 'important');
+                        }
+
+                        [btnSelect, btnStart].forEach(btn => {
+                            btn.style.setProperty('margin', '0', 'important');
+                            btn.style.setProperty('transform', 'none', 'important');
+                            btn.style.setProperty('z-index', '9999', 'important');
+                        });
+                    }
                 }
 
             }, 300); 
