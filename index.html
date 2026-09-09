@@ -80,12 +80,17 @@
                 
                 document.getElementById('power-screen').style.display = 'none';
                 document.getElementById('loading-overlay').style.display = 'flex';
+                
+                // NOVO: Trava de segurança para não esconder o erro do emulador.
+                // Se o jogo não iniciar em 10 segundos, removemos a tela de "Decodificando".
+                setTimeout(function() {
+                    document.getElementById('loading-overlay').style.display = 'none';
+                }, 10000);
 
                 window.EJS_player = '#game';
                 window.EJS_core = sys;
                 window.EJS_gameUrl = `roms/${sys}/${dataId}`;
                 
-                // FORÇA O DOWNLOAD DA BIOS QSOUND NO MAME
                 if (sys === 'mame2003') {
                     window.EJS_biosUrl = `roms/${sys}/qsound.zip`;
                 }
@@ -95,8 +100,6 @@
                 
                 window.EJS_onGameStart = function() {
                     document.getElementById('loading-overlay').style.display = 'none';
-                    
-                    // INICIA O RASTREAMENTO DINÂMICO DE LAYOUT
                     injetarLayoutTatico(sys);
                 };
 
@@ -124,26 +127,18 @@
                 
                 let btnEsq = null, btnDir = null, btnSelect = null, btnStart = null, btnResetar = null;
                 
-                // Mapeia e identifica todos os botões pela string de texto
                 virtualButtons.forEach(btn => {
                     const txt = btn.innerText ? btn.innerText.trim() : '';
-                    
-                    // 1. ELIMINAÇÃO SUMÁRIA DA VELOCIDADE
                     if (txt === 'Rápido' || txt === 'Lento') {
                         btn.style.setProperty('display', 'none', 'important');
                     }
-                    
-                    // 2. CAPTURA DOS NÓS ALVO
                     if (txt === 'ESQ') btnEsq = btn;
                     if (txt === 'DIR') btnDir = btn;
                     if (txt === 'Select') btnSelect = btn;
                     if (txt === 'Start') btnStart = btn;
-                    
-                    // Captura Exclusiva do Atari baseado na imagem do cliente
                     if (txt === 'Resetar' || txt === 'Reset') btnResetar = btn;
                 });
                 
-                // 3. ANCORAGEM TÁTICA SNES (ESTADO DE OURO - INTOCÁVEL)
                 if ((coreName === 'snes' || coreName === 'sfc') && btnEsq && btnDir && btnSelect && btnStart) {
                     const esqRect = btnEsq.getBoundingClientRect();
                     const dirRect = btnDir.getBoundingClientRect();
@@ -170,41 +165,31 @@
                     }
                 }
 
-                // 4. ANCORAGEM TÁTICA ATARI 2600 (MOTOR DE VIEWPORT)
                 if (coreName === 'atari2600' && btnSelect && btnResetar) {
-                    
-                    // Verifica em tempo real se o celular está deitado ou em pé
                     const isPortrait = window.innerHeight > window.innerWidth;
-                    
                     if (isPortrait) {
-                        // VERTICAL: Botões empurrados para 35% de altura, evitando o D-pad gigante
                         btnSelect.style.setProperty('position', 'fixed', 'important');
                         btnSelect.style.setProperty('bottom', '35%', 'important');
                         btnSelect.style.setProperty('left', '12%', 'important'); 
                         btnSelect.style.setProperty('top', 'auto', 'important');
                         btnSelect.style.setProperty('right', 'auto', 'important');
-                        
                         btnResetar.style.setProperty('position', 'fixed', 'important');
                         btnResetar.style.setProperty('bottom', '35%', 'important');
                         btnResetar.style.setProperty('right', '12%', 'important');
                         btnResetar.style.setProperty('top', 'auto', 'important');
                         btnResetar.style.setProperty('left', 'auto', 'important');
                     } else {
-                        // HORIZONTAL: Botões cravados no topo (20%), na área preta acima dos controles
                         btnSelect.style.setProperty('position', 'fixed', 'important');
                         btnSelect.style.setProperty('top', '20%', 'important');
                         btnSelect.style.setProperty('left', '12%', 'important'); 
                         btnSelect.style.setProperty('bottom', 'auto', 'important');
                         btnSelect.style.setProperty('right', 'auto', 'important');
-                        
                         btnResetar.style.setProperty('position', 'fixed', 'important');
                         btnResetar.style.setProperty('top', '20%', 'important');
                         btnResetar.style.setProperty('right', '12%', 'important');
                         btnResetar.style.setProperty('bottom', 'auto', 'important');
                         btnResetar.style.setProperty('left', 'auto', 'important');
                     }
-
-                    // Blindagem comum de margens para ambos os modos
                     [btnSelect, btnResetar].forEach(btn => {
                         btn.style.setProperty('margin', '0', 'important');
                         btn.style.setProperty('transform', 'none', 'important');
@@ -212,7 +197,6 @@
                     });
                 }
 
-                // 5. ANCORAGEM TÁTICA ARCADE (MAME 2003)
                 if (coreName === 'mame2003' && btnSelect && btnStart) {
                     btnSelect.style.setProperty('position', 'fixed', 'important');
                     btnSelect.style.setProperty('top', '15px', 'important');
