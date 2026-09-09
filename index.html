@@ -206,6 +206,27 @@
                     });
                 }
 
+                // 5. ANCORAGEM TÁTICA ARCADE (MAME 2003)
+                if (coreName === 'mame2003' && btnSelect && btnStart) {
+                    btnSelect.style.setProperty('position', 'fixed', 'important');
+                    btnSelect.style.setProperty('top', '15px', 'important');
+                    btnSelect.style.setProperty('left', '15px', 'important');
+                    btnSelect.style.setProperty('bottom', 'auto', 'important');
+                    btnSelect.style.setProperty('right', 'auto', 'important');
+                    btnSelect.style.setProperty('margin', '0', 'important');
+                    btnSelect.style.setProperty('transform', 'none', 'important');
+                    btnSelect.style.setProperty('z-index', '9999', 'important');
+                    
+                    btnStart.style.setProperty('position', 'fixed', 'important');
+                    btnStart.style.setProperty('top', '15px', 'important');
+                    btnStart.style.setProperty('right', '15px', 'important');
+                    btnStart.style.setProperty('bottom', 'auto', 'important');
+                    btnStart.style.setProperty('left', 'auto', 'important');
+                    btnStart.style.setProperty('margin', '0', 'important');
+                    btnStart.style.setProperty('transform', 'none', 'important');
+                    btnStart.style.setProperty('z-index', '9999', 'important');
+                }
+
             }, 300); 
         }
     </script>
