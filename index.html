@@ -84,6 +84,12 @@
                 window.EJS_player = '#game';
                 window.EJS_core = sys;
                 window.EJS_gameUrl = `roms/${sys}/${dataId}`;
+                
+                // FORÇA O DOWNLOAD DA BIOS QSOUND NO MAME
+                if (sys === 'mame2003') {
+                    window.EJS_biosUrl = `roms/${sys}/qsound.zip`;
+                }
+
                 window.EJS_startOnLoaded = true;
                 window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
                 
