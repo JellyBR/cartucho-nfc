@@ -81,20 +81,15 @@
                 document.getElementById('power-screen').style.display = 'none';
                 document.getElementById('loading-overlay').style.display = 'flex';
                 
-                // NOVO: Trava de segurança para não esconder o erro do emulador.
-                // Se o jogo não iniciar em 10 segundos, removemos a tela de "Decodificando".
+                // Trava de segurança para não esconder o erro do emulador.
                 setTimeout(function() {
-                    document.getElementById('loading-overlay').style.display = 'none';
+                    const overlay = document.getElementById('loading-overlay');
+                    if (overlay) overlay.style.display = 'none';
                 }, 10000);
 
                 window.EJS_player = '#game';
                 window.EJS_core = sys;
                 window.EJS_gameUrl = `roms/${sys}/${dataId}`;
-                
-                if (sys === 'mame2003') {
-                    window.EJS_biosUrl = `roms/${sys}/qsound.zip`;
-                }
-
                 window.EJS_startOnLoaded = true;
                 window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
                 
@@ -197,7 +192,8 @@
                     });
                 }
 
-                if (coreName === 'mame2003' && btnSelect && btnStart) {
+                // Cobre tanto o MAME quanto o FBNEO
+                if ((coreName === 'mame2003' || coreName === 'fbneo') && btnSelect && btnStart) {
                     btnSelect.style.setProperty('position', 'fixed', 'important');
                     btnSelect.style.setProperty('top', '15px', 'important');
                     btnSelect.style.setProperty('left', '15px', 'important');
