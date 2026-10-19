@@ -94,21 +94,17 @@
                 window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
                 
                 // ==========================================================
-                // CONFIGURAÇÃO EXCLUSIVA DO GAMEPAD VIRTUAL PARA N64 (MARIO KART 64)
+                // CRIAÇÃO LIMPA DOS BOTÕES DO N64 (MARIO KART 64)
+                // (O posicionamento real será feito pelo injetarLayoutTatico)
                 // ==========================================================
                 if (sys === 'n64') {
                     window.EJS_VirtualGamepadSettings = [
-                        // Lado Esquerdo: Analógico para direção + Gatilho Z (Itens)
                         { type: "zone", location: "left", left: "10%", bottom: "10%", joystickInput: true, inputValues: [19, 18, 17, 16] },
-                        { type: "button", text: "Z", id: "n64_z", location: "left", left: "15%", top: "20%", bold: true, fontSize: 22, input_value: 12 },
-
-                        // Centro/Topo: Botão Start
-                        { type: "button", text: "Start", id: "n64_start", location: "center", left: "45%", top: "10%", bold: true, fontSize: 16, input_value: 3 },
-
-                        // Lado Direito: A (Acelerar), B (Frear/Ré) e R (Pulo/Drift)
-                        { type: "button", text: "A", id: "n64_a", location: "right", right: "10%", bottom: "15%", bold: true, fontSize: 24, input_value: 0 },
-                        { type: "button", text: "B", id: "n64_b", location: "right", right: "26%", bottom: "10%", bold: true, fontSize: 24, input_value: 1 },
-                        { type: "button", text: "R", id: "n64_r", location: "right", right: "12%", top: "20%", bold: true, fontSize: 22, input_value: 11 }
+                        { type: "button", text: "Z", id: "n64_z", location: "left", left: "10%", top: "10%", bold: true, fontSize: 20, input_value: 12 },
+                        { type: "button", text: "Start", id: "n64_start", location: "center", left: "45%", top: "10%", bold: true, fontSize: 14, input_value: 3 },
+                        { type: "button", text: "A", id: "n64_a", location: "right", right: "10%", bottom: "15%", bold: true, fontSize: 22, input_value: 0 },
+                        { type: "button", text: "B", id: "n64_b", location: "right", right: "25%", bottom: "10%", bold: true, fontSize: 22, input_value: 1 },
+                        { type: "button", text: "R", id: "n64_r", location: "right", right: "10%", top: "15%", bold: true, fontSize: 20, input_value: 11 }
                     ];
                 }
 
@@ -141,9 +137,12 @@
                 
                 let btnEsq = null, btnDir = null, btnSelect = null, btnStart = null, btnResetar = null;
                 let btnX = null, btnY = null;
-                let btnL = null, btnCUp = null, btnCDown = null, btnCLeft = null, btnCRight = null;
+                let btnA = null, btnB = null, btnZ = null, btnR = null;
                 
                 virtualButtons.forEach(btn => {
+                    // Evita capturar contentores pais que juntam textos de vários botões
+                    if (btn.children.length > 0) return;
+
                     const txt = btn.innerText ? btn.innerText.trim() : '';
                     if (txt === 'Rápido' || txt === 'Lento') {
                         btn.style.setProperty('display', 'none', 'important');
@@ -158,12 +157,11 @@
                     if (txt === 'X') btnX = btn;
                     if (txt === 'Y') btnY = btn;
 
-                    // Captura de botões extras caso o N64 renderize algum padrão residual
-                    if (txt === 'L') btnL = btn;
-                    if (txt === '▲' || txt === 'C▲' || txt === 'C-Up') btnCUp = btn;
-                    if (txt === '▼' || txt === 'C▼' || txt === 'C-Down') btnCDown = btn;
-                    if (txt === '◄' || txt === 'C◄' || txt === 'C-Left') btnCLeft = btn;
-                    if (txt === '►' || txt === 'C►' || txt === 'C-Right') btnCRight = btn;
+                    // Captura exclusiva para mapeamento do N64
+                    if (txt === 'A') btnA = btn;
+                    if (txt === 'B') btnB = btn;
+                    if (txt === 'Z') btnZ = btn;
+                    if (txt === 'R') btnR = btn;
                 });
                 
                 // ==========================================
@@ -279,31 +277,41 @@
                 }
 
                 // ==========================================
-                // 4. NINTENDO 64 (MARIO KART 64)
+                // 4. NINTENDO 64 (MARIO KART 64 - SEPARAÇÃO CIRÚRGICA)
                 // ==========================================
                 if (coreName === 'n64') {
-                    // Garante que botões desnecessários fiquem ocultos caso o EmulatorJS tente forçá-los
-                    [btnEsq, btnL, btnSelect, btnCUp, btnCDown, btnCLeft, btnCRight].forEach(btn => {
-                        if (btn) btn.style.setProperty('display', 'none', 'important');
-                    });
+                    const isPortrait = window.innerHeight > window.innerWidth;
+                    
+                    // O EmulatorJS traduz o botão 'R' para 'DIR' automaticamente
+                    const gatilhoR = btnR || btnDir;
 
-                    // Ajuste fino de posição para o botão Start na vertical e horizontal
-                    if (btnStart) {
-                        const isPortrait = window.innerHeight > window.innerWidth;
-                        btnStart.style.setProperty('position', 'fixed', 'important');
-                        btnStart.style.setProperty('left', '50%', 'important');
-                        btnStart.style.setProperty('right', 'auto', 'important');
-                        btnStart.style.setProperty('margin', '0', 'important');
-                        btnStart.style.setProperty('transform', 'translateX(-50%)', 'important');
-                        btnStart.style.setProperty('z-index', '9999', 'important');
+                    // Função auxiliar para aplicar coordenadas fixas no ecrã sem sobreposição
+                    const posicionarFixo = (el, top, bottom, left, right) => {
+                        if (!el) return;
+                        el.style.setProperty('position', 'fixed', 'important');
+                        el.style.setProperty('top', top, 'important');
+                        el.style.setProperty('bottom', bottom, 'important');
+                        el.style.setProperty('left', left, 'important');
+                        el.style.setProperty('right', right, 'important');
+                        el.style.setProperty('margin', '0', 'important');
+                        el.style.setProperty('transform', 'none', 'important');
+                        el.style.setProperty('z-index', '9999', 'important');
+                    };
 
-                        if (isPortrait) {
-                            btnStart.style.setProperty('bottom', '38%', 'important');
-                            btnStart.style.setProperty('top', 'auto', 'important');
-                        } else {
-                            btnStart.style.setProperty('top', '15px', 'important');
-                            btnStart.style.setProperty('bottom', 'auto', 'important');
-                        }
+                    if (isPortrait) {
+                        // MODO VERTICAL: Tudo organizado na área preta inferior
+                        posicionarFixo(btnStart, 'auto', '42%', '42%', 'auto');
+                        posicionarFixo(btnZ,     'auto', '32%', '8%',  'auto'); // Acima do analógico esquerdo
+                        posicionarFixo(gatilhoR, 'auto', '32%', 'auto', '8%');  // Gatilho direito no alto
+                        posicionarFixo(btnA,     'auto', '16%', 'auto', '6%');  // Acelerador bem na ponta direita
+                        posicionarFixo(btnB,     'auto', '8%',  'auto', '24%'); // Travão mais abaixo e à esquerda do A
+                    } else {
+                        // MODO HORIZONTAL: Aproveita as barras pretas laterais (4:3)
+                        posicionarFixo(btnStart, '18px', 'auto', '25px', 'auto'); // Canto superior esquerdo (fora do jogo)
+                        posicionarFixo(btnZ,     '26%',  'auto', '5%',   'auto'); // Acima do analógico vermelho (sem tocar nele)
+                        posicionarFixo(gatilhoR, '24%',  'auto', 'auto', '5%');   // Gatilho R/DIR isolado na parte superior direita
+                        posicionarFixo(btnA,     'auto', '24%',  'auto', '3%');   // Botão A isolado na direita
+                        posicionarFixo(btnB,     'auto', '10%',  'auto', '12%');  // Botão B em baixo à esquerda do A (diagonal ergonómica)
                     }
                 }
 
