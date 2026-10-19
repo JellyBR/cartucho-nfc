@@ -95,7 +95,6 @@
                 
                 // ==========================================================
                 // CRIAÇÃO LIMPA DOS BOTÕES DO N64 (MARIO KART 64)
-                // (O posicionamento real será feito pelo injetarLayoutTatico)
                 // ==========================================================
                 if (sys === 'n64') {
                     window.EJS_VirtualGamepadSettings = [
@@ -137,12 +136,8 @@
                 
                 let btnEsq = null, btnDir = null, btnSelect = null, btnStart = null, btnResetar = null;
                 let btnX = null, btnY = null;
-                let btnA = null, btnB = null, btnZ = null, btnR = null;
                 
                 virtualButtons.forEach(btn => {
-                    // Evita capturar contentores pais que juntam textos de vários botões
-                    if (btn.children.length > 0) return;
-
                     const txt = btn.innerText ? btn.innerText.trim() : '';
                     if (txt === 'Rápido' || txt === 'Lento') {
                         btn.style.setProperty('display', 'none', 'important');
@@ -156,12 +151,6 @@
                     // Captura dos novos botões
                     if (txt === 'X') btnX = btn;
                     if (txt === 'Y') btnY = btn;
-
-                    // Captura exclusiva para mapeamento do N64
-                    if (txt === 'A') btnA = btn;
-                    if (txt === 'B') btnB = btn;
-                    if (txt === 'Z') btnZ = btn;
-                    if (txt === 'R') btnR = btn;
                 });
                 
                 // ==========================================
@@ -277,16 +266,43 @@
                 }
 
                 // ==========================================
-                // 4. NINTENDO 64 (MARIO KART 64 - SEPARAÇÃO CIRÚRGICA)
+                // 4. NINTENDO 64 (MARIO KART 64 - SEPARAÇÃO FORÇADA)
                 // ==========================================
                 if (coreName === 'n64') {
                     const isPortrait = window.innerHeight > window.innerWidth;
-                    
-                    // O EmulatorJS traduz o botão 'R' para 'DIR' automaticamente
-                    const gatilhoR = btnR || btnDir;
 
-                    // Função auxiliar para aplicar coordenadas fixas no ecrã sem sobreposição
-                    const posicionarFixo = (el, top, bottom, left, right) => {
+                    // Localiza a caixa real do botão (o círculo com borda) e neutraliza bloqueios dos pais
+                    const encontrarCaixaBotao = (rotulo) => {
+                        for (let el of virtualButtons) {
+                            const txt = el.innerText ? el.innerText.trim() : '';
+                            if (txt === rotulo) {
+                                let atual = el;
+                                while (atual && atual !== gameContainer) {
+                                    const st = window.getComputedStyle(atual);
+                                    if (st.borderRadius !== '0px' || parseFloat(st.borderWidth) > 0) {
+                                        // Limpa transforms nos pais para liberar o position: fixed na tela inteira
+                                        let pai = atual.parentElement;
+                                        while (pai && pai !== gameContainer) {
+                                            pai.style.setProperty('transform', 'none', 'important');
+                                            pai = pai.parentElement;
+                                        }
+                                        return atual;
+                                    }
+                                    atual = atual.parentElement;
+                                }
+                                return el;
+                            }
+                        }
+                        return null;
+                    };
+
+                    const n64Start = encontrarCaixaBotao('Start');
+                    const n64Z     = encontrarCaixaBotao('Z');
+                    const n64A     = encontrarCaixaBotao('A');
+                    const n64B     = encontrarCaixaBotao('B');
+                    const n64R     = encontrarCaixaBotao('DIR') || encontrarCaixaBotao('R');
+
+                    const fixarNaTela = (el, top, bottom, left, right) => {
                         if (!el) return;
                         el.style.setProperty('position', 'fixed', 'important');
                         el.style.setProperty('top', top, 'important');
@@ -299,19 +315,19 @@
                     };
 
                     if (isPortrait) {
-                        // MODO VERTICAL: Tudo organizado na área preta inferior
-                        posicionarFixo(btnStart, 'auto', '42%', '42%', 'auto');
-                        posicionarFixo(btnZ,     'auto', '32%', '8%',  'auto'); // Acima do analógico esquerdo
-                        posicionarFixo(gatilhoR, 'auto', '32%', 'auto', '8%');  // Gatilho direito no alto
-                        posicionarFixo(btnA,     'auto', '16%', 'auto', '6%');  // Acelerador bem na ponta direita
-                        posicionarFixo(btnB,     'auto', '8%',  'auto', '24%'); // Travão mais abaixo e à esquerda do A
+                        // MODO VERTICAL (Retrato): Distribuídos com folga na parte preta inferior
+                        fixarNaTela(n64Start, 'auto', '44%',   '40%',  'auto'); // Start centralizado abaixo do vídeo
+                        fixarNaTela(n64Z,     'auto', '32%',   '25px', 'auto'); // Gatilho Z bem acima do analógico vermelho
+                        fixarNaTela(n64R,     'auto', '32%',   'auto', '25px'); // Gatilho DIR/R no alto à direita
+                        fixarNaTela(n64A,     'auto', '16%',   'auto', '20px'); // Botão A isolado na direita
+                        fixarNaTela(n64B,     'auto', '7%',    'auto', '95px'); // Botão B afastado 75px à esquerda e abaixo do A
                     } else {
-                        // MODO HORIZONTAL: Aproveita as barras pretas laterais (4:3)
-                        posicionarFixo(btnStart, '18px', 'auto', '25px', 'auto'); // Canto superior esquerdo (fora do jogo)
-                        posicionarFixo(btnZ,     '26%',  'auto', '5%',   'auto'); // Acima do analógico vermelho (sem tocar nele)
-                        posicionarFixo(gatilhoR, '24%',  'auto', 'auto', '5%');   // Gatilho R/DIR isolado na parte superior direita
-                        posicionarFixo(btnA,     'auto', '24%',  'auto', '3%');   // Botão A isolado na direita
-                        posicionarFixo(btnB,     'auto', '10%',  'auto', '12%');  // Botão B em baixo à esquerda do A (diagonal ergonómica)
+                        // MODO HORIZONTAL (Paisagem): Nas bordas pretas laterais com distância em pixels
+                        fixarNaTela(n64Start, '15px', 'auto',  '25px',  'auto'); // Start no canto superior esquerdo (fora do jogo)
+                        fixarNaTela(n64Z,     '20%',  'auto',  '30px',  'auto'); // Z no alto à esquerda, longe do analógico vermelho
+                        fixarNaTela(n64R,     '18%',  'auto',  'auto',  '30px'); // DIR/R no alto à direita (posição de gatilho)
+                        fixarNaTela(n64A,     'auto', '22%',   'auto',  '20px'); // Botão A na direita
+                        fixarNaTela(n64B,     'auto', '8%',    'auto',  '95px'); // Botão B na diagonal inferior esquerda do A (sem encostar!)
                     }
                 }
 
