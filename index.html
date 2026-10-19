@@ -93,6 +93,25 @@
                 window.EJS_startOnLoaded = true;
                 window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
                 
+                // ==========================================================
+                // CONFIGURAÇÃO EXCLUSIVA DO GAMEPAD VIRTUAL PARA N64 (MARIO KART 64)
+                // ==========================================================
+                if (sys === 'n64') {
+                    window.EJS_VirtualGamepadSettings = [
+                        // Lado Esquerdo: Analógico para direção + Gatilho Z (Itens)
+                        { type: "zone", location: "left", left: "10%", bottom: "10%", joystickInput: true, inputValues: [19, 18, 17, 16] },
+                        { type: "button", text: "Z", id: "n64_z", location: "left", left: "15%", top: "20%", bold: true, fontSize: 22, input_value: 12 },
+
+                        // Centro/Topo: Botão Start
+                        { type: "button", text: "Start", id: "n64_start", location: "center", left: "45%", top: "10%", bold: true, fontSize: 16, input_value: 3 },
+
+                        // Lado Direito: A (Acelerar), B (Frear/Ré) e R (Pulo/Drift)
+                        { type: "button", text: "A", id: "n64_a", location: "right", right: "10%", bottom: "15%", bold: true, fontSize: 24, input_value: 0 },
+                        { type: "button", text: "B", id: "n64_b", location: "right", right: "26%", bottom: "10%", bold: true, fontSize: 24, input_value: 1 },
+                        { type: "button", text: "R", id: "n64_r", location: "right", right: "12%", top: "20%", bold: true, fontSize: 22, input_value: 11 }
+                    ];
+                }
+
                 window.EJS_onGameStart = function() {
                     document.getElementById('loading-overlay').style.display = 'none';
                     injetarLayoutTatico(sys);
@@ -122,6 +141,7 @@
                 
                 let btnEsq = null, btnDir = null, btnSelect = null, btnStart = null, btnResetar = null;
                 let btnX = null, btnY = null;
+                let btnL = null, btnCUp = null, btnCDown = null, btnCLeft = null, btnCRight = null;
                 
                 virtualButtons.forEach(btn => {
                     const txt = btn.innerText ? btn.innerText.trim() : '';
@@ -137,6 +157,13 @@
                     // Captura dos novos botões
                     if (txt === 'X') btnX = btn;
                     if (txt === 'Y') btnY = btn;
+
+                    // Captura de botões extras caso o N64 renderize algum padrão residual
+                    if (txt === 'L') btnL = btn;
+                    if (txt === '▲' || txt === 'C▲' || txt === 'C-Up') btnCUp = btn;
+                    if (txt === '▼' || txt === 'C▼' || txt === 'C-Down') btnCDown = btn;
+                    if (txt === '◄' || txt === 'C◄' || txt === 'C-Left') btnCLeft = btn;
+                    if (txt === '►' || txt === 'C►' || txt === 'C-Right') btnCRight = btn;
                 });
                 
                 // ==========================================
@@ -248,6 +275,35 @@
                             btn.style.setProperty('transform', 'none', 'important');
                             btn.style.setProperty('z-index', '9999', 'important');
                         });
+                    }
+                }
+
+                // ==========================================
+                // 4. NINTENDO 64 (MARIO KART 64)
+                // ==========================================
+                if (coreName === 'n64') {
+                    // Garante que botões desnecessários fiquem ocultos caso o EmulatorJS tente forçá-los
+                    [btnEsq, btnL, btnSelect, btnCUp, btnCDown, btnCLeft, btnCRight].forEach(btn => {
+                        if (btn) btn.style.setProperty('display', 'none', 'important');
+                    });
+
+                    // Ajuste fino de posição para o botão Start na vertical e horizontal
+                    if (btnStart) {
+                        const isPortrait = window.innerHeight > window.innerWidth;
+                        btnStart.style.setProperty('position', 'fixed', 'important');
+                        btnStart.style.setProperty('left', '50%', 'important');
+                        btnStart.style.setProperty('right', 'auto', 'important');
+                        btnStart.style.setProperty('margin', '0', 'important');
+                        btnStart.style.setProperty('transform', 'translateX(-50%)', 'important');
+                        btnStart.style.setProperty('z-index', '9999', 'important');
+
+                        if (isPortrait) {
+                            btnStart.style.setProperty('bottom', '38%', 'important');
+                            btnStart.style.setProperty('top', 'auto', 'important');
+                        } else {
+                            btnStart.style.setProperty('top', '15px', 'important');
+                            btnStart.style.setProperty('bottom', 'auto', 'important');
+                        }
                     }
                 }
 
