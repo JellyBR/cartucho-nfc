@@ -93,20 +93,6 @@
                 window.EJS_startOnLoaded = true;
                 window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
                 
-                // ==========================================================
-                // CRIAÇÃO LIMPA DOS BOTÕES DO N64 (MARIO KART 64)
-                // ==========================================================
-                if (sys === 'n64') {
-                    window.EJS_VirtualGamepadSettings = [
-                        { type: "zone", location: "left", left: "10%", bottom: "10%", joystickInput: true, inputValues: [19, 18, 17, 16] },
-                        { type: "button", text: "Z", id: "n64_z", location: "left", left: "10%", top: "10%", bold: true, fontSize: 20, input_value: 12 },
-                        { type: "button", text: "Start", id: "n64_start", location: "center", left: "45%", top: "10%", bold: true, fontSize: 14, input_value: 3 },
-                        { type: "button", text: "A", id: "n64_a", location: "right", right: "10%", bottom: "15%", bold: true, fontSize: 22, input_value: 0 },
-                        { type: "button", text: "B", id: "n64_b", location: "right", right: "25%", bottom: "10%", bold: true, fontSize: 22, input_value: 1 },
-                        { type: "button", text: "R", id: "n64_r", location: "right", right: "10%", top: "15%", bold: true, fontSize: 20, input_value: 11 }
-                    ];
-                }
-
                 window.EJS_onGameStart = function() {
                     document.getElementById('loading-overlay').style.display = 'none';
                     injetarLayoutTatico(sys);
@@ -266,21 +252,22 @@
                 }
 
                 // ==========================================
-                // 4. NINTENDO 64 (MARIO KART 64 - SEPARAÇÃO FORÇADA)
+                // 4. NINTENDO 64 (LAYOUT INFOGRÁFICO MARIO KART 64)
                 // ==========================================
                 if (coreName === 'n64') {
                     const isPortrait = window.innerHeight > window.innerWidth;
 
-                    // Localiza a caixa real do botão (o círculo com borda) e neutraliza bloqueios dos pais
-                    const encontrarCaixaBotao = (rotulo) => {
+                    // Usa os botões NATIVOS do EmulatorJS (garante Multi-Touch + Analógico 100% funcional)
+                    const encontrarBotaoNativo = (rotulos) => {
+                        const lista = Array.isArray(rotulos) ? rotulos : [rotulos];
                         for (let el of virtualButtons) {
+                            if (el.children.length > 0) continue;
                             const txt = el.innerText ? el.innerText.trim() : '';
-                            if (txt === rotulo) {
+                            if (lista.includes(txt)) {
                                 let atual = el;
                                 while (atual && atual !== gameContainer) {
                                     const st = window.getComputedStyle(atual);
-                                    if (st.borderRadius !== '0px' || parseFloat(st.borderWidth) > 0) {
-                                        // Limpa transforms nos pais para liberar o position: fixed na tela inteira
+                                    if (st.position === 'absolute' || st.position === 'fixed' || parseFloat(st.borderRadius) > 0) {
                                         let pai = atual.parentElement;
                                         while (pai && pai !== gameContainer) {
                                             pai.style.setProperty('transform', 'none', 'important');
@@ -296,38 +283,91 @@
                         return null;
                     };
 
-                    const n64Start = encontrarCaixaBotao('Start');
-                    const n64Z     = encontrarCaixaBotao('Z');
-                    const n64A     = encontrarCaixaBotao('A');
-                    const n64B     = encontrarCaixaBotao('B');
-                    const n64R     = encontrarCaixaBotao('DIR') || encontrarCaixaBotao('R');
+                    const n64A     = encontrarBotaoNativo(['A']);
+                    const n64B     = encontrarBotaoNativo(['B']);
+                    const n64Z     = encontrarBotaoNativo(['Z']);
+                    const n64R     = encontrarBotaoNativo(['DIR', 'R']);
+                    const n64L     = encontrarBotaoNativo(['ESQ', 'L']);
+                    const n64Start = encontrarBotaoNativo(['Start', 'START']);
+                    const n64CUp   = encontrarBotaoNativo(['▲', 'C▲', 'C-Up']);
+                    const n64CDown = encontrarBotaoNativo(['▼', 'C▼', 'C-Down']);
+                    const n64CLeft = encontrarBotaoNativo(['◄', 'C◄', 'C-Left']);
+                    const n64CRight= encontrarBotaoNativo(['►', 'C►', 'C-Right']);
 
-                    const fixarNaTela = (el, top, bottom, left, right) => {
+                    // 1. Oculta o Gatilho L (ESQ) e o D-Pad em cruz nativo (deixando apenas o Analógico)
+                    if (n64L) n64L.style.setProperty('display', 'none', 'important');
+                    const dpadElements = gameContainer.querySelectorAll('.ejs_dpad_main, .ejs_dpad_container, [class*="dpad"]');
+                    dpadElements.forEach(d => d.style.setProperty('display', 'none', 'important'));
+
+                    // Se o R vier traduzido como "DIR", renomeia visualmente para "R" igual ao infográfico
+                    if (n64R && n64R.innerText.trim() === 'DIR') {
+                        n64R.innerText = 'R';
+                    }
+
+                    // Função de estilização e posicionamento fiel ao infográfico
+                    const estilizarBotao = (el, top, bottom, left, right, w, h, bg, corTexto, radius, fontSize) => {
                         if (!el) return;
                         el.style.setProperty('position', 'fixed', 'important');
                         el.style.setProperty('top', top, 'important');
                         el.style.setProperty('bottom', bottom, 'important');
                         el.style.setProperty('left', left, 'important');
                         el.style.setProperty('right', right, 'important');
+                        el.style.setProperty('width', w, 'important');
+                        el.style.setProperty('height', h, 'important');
+                        el.style.setProperty('background-color', bg, 'important');
+                        el.style.setProperty('color', corTexto, 'important');
+                        el.style.setProperty('border-radius', radius, 'important');
+                        el.style.setProperty('border', '2px solid rgba(255,255,255,0.35)', 'important');
+                        el.style.setProperty('display', 'flex', 'important');
+                        el.style.setProperty('justify-content', 'center', 'important');
+                        el.style.setProperty('align-items', 'center', 'important');
+                        el.style.setProperty('font-weight', 'bold', 'important');
+                        el.style.setProperty('font-size', fontSize, 'important');
                         el.style.setProperty('margin', '0', 'important');
                         el.style.setProperty('transform', 'none', 'important');
                         el.style.setProperty('z-index', '9999', 'important');
+                        el.style.setProperty('box-shadow', '0 4px 10px rgba(0,0,0,0.6)', 'important');
                     };
 
                     if (isPortrait) {
-                        // MODO VERTICAL (Retrato): Distribuídos com folga na parte preta inferior
-                        fixarNaTela(n64Start, 'auto', '44%',   '40%',  'auto'); // Start centralizado abaixo do vídeo
-                        fixarNaTela(n64Z,     'auto', '32%',   '25px', 'auto'); // Gatilho Z bem acima do analógico vermelho
-                        fixarNaTela(n64R,     'auto', '32%',   'auto', '25px'); // Gatilho DIR/R no alto à direita
-                        fixarNaTela(n64A,     'auto', '16%',   'auto', '20px'); // Botão A isolado na direita
-                        fixarNaTela(n64B,     'auto', '7%',    'auto', '95px'); // Botão B afastado 75px à esquerda e abaixo do A
+                        // ==================================================
+                        // MODO VERTICAL (IDÊNTICO AO INFOGRÁFICO ESQUERDO)
+                        // ==================================================
+                        // Linha superior de comandos abaixo da tela do jogo: Z (esq), START (centro), R (dir)
+                        estilizarBotao(n64Z,     'auto', '42%', '6%',  'auto', '68px', '36px', 'rgba(65, 75, 90, 0.9)',  '#fff', '12px', '16px');
+                        estilizarBotao(n64Start, 'auto', '40%', '39%', 'auto', '76px', '32px', 'rgba(55, 65, 80, 0.95)', '#fff', '18px', '13px');
+                        estilizarBotao(n64R,     'auto', '42%', 'auto','6%',   '68px', '36px', 'rgba(65, 75, 90, 0.9)',  '#fff', '12px', '16px');
+
+                        // Losango dos Botões C (Amarelos) abaixo do R
+                        estilizarBotao(n64CUp,   'auto', '32%', 'auto', '14%', '34px', '34px', 'rgba(235, 175, 10, 0.95)', '#000', '50%', '13px');
+                        estilizarBotao(n64CDown, 'auto', '21%', 'auto', '14%', '34px', '34px', 'rgba(235, 175, 10, 0.95)', '#000', '50%', '13px');
+                        estilizarBotao(n64CLeft, 'auto', '26.5%', 'auto', '24%', '34px', '34px', 'rgba(235, 175, 10, 0.95)', '#000', '50%', '13px');
+                        estilizarBotao(n64CRight,'auto', '26.5%', 'auto', '4%',  '34px', '34px', 'rgba(235, 175, 10, 0.95)', '#000', '50%', '13px');
+
+                        // Botões Principais: B (Verde) e A (Azul) na base direita
+                        estilizarBotao(n64B,     'auto', '11%', 'auto', '23%', '64px', '64px', 'rgba(25, 165, 75, 0.95)',  '#fff', '50%', '24px');
+                        estilizarBotao(n64A,     'auto', '5%',  'auto', '5%',  '70px', '70px', 'rgba(15, 115, 240, 0.95)', '#fff', '50%', '26px');
+
                     } else {
-                        // MODO HORIZONTAL (Paisagem): Nas bordas pretas laterais com distância em pixels
-                        fixarNaTela(n64Start, '15px', 'auto',  '25px',  'auto'); // Start no canto superior esquerdo (fora do jogo)
-                        fixarNaTela(n64Z,     '20%',  'auto',  '30px',  'auto'); // Z no alto à esquerda, longe do analógico vermelho
-                        fixarNaTela(n64R,     '18%',  'auto',  'auto',  '30px'); // DIR/R no alto à direita (posição de gatilho)
-                        fixarNaTela(n64A,     'auto', '22%',   'auto',  '20px'); // Botão A na direita
-                        fixarNaTela(n64B,     'auto', '8%',    'auto',  '95px'); // Botão B na diagonal inferior esquerda do A (sem encostar!)
+                        // ==================================================
+                        // MODO HORIZONTAL (IDÊNTICO AO INFOGRÁFICO DIREITO)
+                        // ==================================================
+                        // Gatilhos Z e R no topo das barras laterais
+                        estilizarBotao(n64Z,     '8%',  'auto', '3%',  'auto', '78px', '42px', 'rgba(65, 75, 90, 0.9)',  '#fff', '12px', '18px');
+                        estilizarBotao(n64R,     '8%',  'auto', 'auto','3%',   '78px', '42px', 'rgba(65, 75, 90, 0.9)',  '#fff', '12px', '18px');
+
+                        // Botão START centralizado na parte inferior
+                        estilizarBotao(n64Start, 'auto', '4%',  '44%', 'auto', '84px', '32px', 'rgba(55, 65, 80, 0.95)', '#fff', '18px', '13px');
+
+                        // Losango dos Botões C (Amarelos) no meio da lateral direita
+                        estilizarBotao(n64CUp,   '28%', 'auto', 'auto', '7%',  '36px', '36px', 'rgba(235, 175, 10, 0.95)', '#000', '50%', '13px');
+                        estilizarBotao(n64CDown, '50%', 'auto', 'auto', '7%',  '36px', '36px', 'rgba(235, 175, 10, 0.95)', '#000', '50%', '13px');
+                        estilizarBotao(n64CLeft, '39%', 'auto', 'auto', '12.5%','36px', '36px', 'rgba(235, 175, 10, 0.95)', '#000', '50%', '13px');
+                        estilizarBotao(n64CRight,'39%', 'auto', 'auto', '1.5%', '36px', '36px', 'rgba(235, 175, 10, 0.95)', '#000', '50%', '13px');
+
+                        // Botões Principais: B (Verde) e A (Azul) no canto inferior direito
+                        estilizarBotao(n64B,     'auto', '16%', 'auto', '11%', '66px', '66px', 'rgba(25, 165, 75, 0.95)',  '#fff', '50%', '24px');
+                        estilizarBotao(n64A,     'auto', '6%',  'auto', '2%',  '72px', '72px', 'rgba(15, 115, 240, 0.95)', '#fff', '50%', '26px');
                     }
                 }
 
